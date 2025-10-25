@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from .config import settings
+from .routers import health, players, matches
 
 app = FastAPI(title="PingPong API")
 
@@ -12,6 +13,6 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-@app.get("/healthz")
-def health_check():
-    return {"ok": True, "service": "pingpong-api"}
+app.include_router(health.router)
+app.include_router(players.router)
+app.include_router(matches.router)
