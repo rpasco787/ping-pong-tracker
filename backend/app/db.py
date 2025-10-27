@@ -46,6 +46,15 @@ class GameScore(SQLModel, table=True):
     home: int = Field(ge=0)
     away: int = Field(ge=0)
 
+class User(SQLModel, table=True):
+    id: Optional[int] = Field(default=None, primary_key=True)
+    username: str = Field(index=True)
+    email: str = Field(index=True)
+    hashed_password: str
+    is_active: bool = Field(default=True)
+    is_superuser: bool = Field(default=False)
+    player_id: Optional[int] = Field(default=None,foreign_key="player.id")
+
 
 
 def create_db_and_tables() -> None:
