@@ -3,18 +3,20 @@ from typing import Generator, Optional
 from typing import List
 import os
 
-# PostgreSQL database URL
-# Default: postgresql://user:password@localhost:5432/ping_pong
-# Override with environment variable DATABASE_URL
+# SQLite database URL for development
+# Override with environment variable DATABASE_URL for production (e.g., PostgreSQL)
 DATABASE_URL = os.getenv(
     "DATABASE_URL",
-    "postgresql://postgres:postgres@localhost:5432/ping_pong"
+    "sqlite:///./ping_pong.db"
 )
 
 # Create engine
+# connect_args is only needed for SQLite
+connect_args = {"check_same_thread": False} if DATABASE_URL.startswith("sqlite") else {}
 engine = create_engine(
     DATABASE_URL, 
     echo=True,  # Set to False in production
+    connect_args=connect_args
 )
 
 
