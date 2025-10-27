@@ -213,7 +213,7 @@ export default function Home() {
             <form onSubmit={handleCreateMatch} className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium mb-2 text-gray-300">Home Player</label>
+                  <label className="block text-sm font-medium mb-2 text-gray-300">Player 1</label>
                   <select
                     value={homeId}
                     onChange={(e) => setHomeId(Number(e.target.value))}
@@ -227,7 +227,7 @@ export default function Home() {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-2 text-gray-300">Away Player</label>
+                  <label className="block text-sm font-medium mb-2 text-gray-300">Player 2</label>
                   <select
                     value={awayId}
                     onChange={(e) => setAwayId(Number(e.target.value))}
