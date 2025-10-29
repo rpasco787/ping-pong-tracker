@@ -8,7 +8,7 @@ from alembic import context
 # Import your SQLModel metadata and models
 from app.db import SQLModel, DATABASE_URL
 # Import all models so Alembic can detect them
-from app.db import Player, Match, GameScore
+from app.db import Player, Match, GameScore, User
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.

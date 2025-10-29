@@ -2,28 +2,30 @@
 import { useEffect, useState } from "react";
 import { 
   getPlayers, 
-  createPlayer, 
   createMatch, 
   getMatches,
   type Player, 
   type Match,
-  type PlayerInput,
   type MatchInput 
 } from "@/lib/api";
+import { useAuth } from "@/contexts/AuthContext";
 
 export default function Home() {
+  const { user, loading: authContextLoading, login, register, logout } = useAuth();
   // State for data
   const [players, setPlayers] = useState<Player[]>([]);
   const [matches, setMatches] = useState<Match[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // State for forms
-  const [newPlayerName, setNewPlayerName] = useState("");
-  const [newPlayerEmail, setNewPlayerEmail] = useState("");
-  const [showMatchForm, setShowMatchForm] = useState(false);
-  
+  // Auth form state
+  const [showLogin, setShowLogin] = useState(true);
+  const [authError, setAuthError] = useState("");
+  const [authFormLoading, setAuthFormLoading] = useState(false);
+  const [username, setUsername] = useState("");
+  const [email, setEmail] = useState("");
+
   // Match form state
-  const [homeId, setHomeId] = useState<number | "">("");
+  const [showMatchForm, setShowMatchForm] = useState(false);
   const [awayId, setAwayId] = useState<number | "">("");
   const [gameScores, setGameScores] = useState<Array<{ home: number; away: number }>>([
     { home: 0, away: 0 }
@@ -49,42 +51,62 @@ export default function Home() {
     }
   }
 
-  async function handleCreatePlayer(e: React.FormEvent) {
+  async function handleLogin(e: React.FormEvent) {
     e.preventDefault();
-    if (!newPlayerName.trim()) return;
-    
+    setAuthError("");
+    setAuthFormLoading(true);
     try {
-      const playerInput: PlayerInput = { 
-        name: newPlayerName,
-        email: newPlayerEmail || undefined
-      };
-      await createPlayer(playerInput);
-      setNewPlayerName("");
-      setNewPlayerEmail("");
-      loadData(); // Refresh
+      await login(username, password);
+      setUsername("");
+      setPassword("");
     } catch (error) {
-      alert("Failed to create player: " + error);
+      setAuthError(error instanceof Error ? error.message : "Failed to login");
+    } finally {
+      setAuthFormLoading(false);
+    }
+  }
+
+  async function handleRegister(e: React.FormEvent) {
+    e.preventDefault();
+    setAuthError("");
+    if (!email.trim()) {
+      setAuthError("Email is required");
+      return;
+    }
+    setAuthFormLoading(true);
+    try {
+      await register(username, email, password);
+      setUsername("");
+      setEmail("");
+      setPassword("");
+    } catch (error) {
+      setAuthError(error instanceof Error ? error.message : "Failed to register");
+    } finally {
+      setAuthFormLoading(false);
     }
   }
 
   async function handleCreateMatch(e: React.FormEvent) {
     e.preventDefault();
-    if (homeId === "" || awayId === "") {
-      alert("Please select both players");
+    if (!user?.player_id) {
+      alert("Your account is not linked to a player. Please contact an administrator.");
+      return;
+    }
+    if (awayId === "") {
+      alert("Please select an opponent");
       return;
     }
 
     try {
       const matchInput: MatchInput = {
         played_at: new Date().toISOString(),
-        home_id: Number(homeId),
+        home_id: user.player_id, // Logged-in user is always the home player
         away_id: Number(awayId),
         games: gameScores
       };
       await createMatch(matchInput);
       
       // Reset form
-      setHomeId("");
       setAwayId("");
       setGameScores([{ home: 0, away: 0 }]);
       setShowMatchForm(false);
@@ -104,7 +126,7 @@ export default function Home() {
     setGameScores(updated);
   }
 
-  if (loading) {
+  if (authContextLoading || loading) {
     return (
       <main className="min-h-screen p-6 bg-gray-900">
         <div className="max-w-6xl mx-auto">
@@ -120,13 +142,143 @@ export default function Home() {
   return (
     <main className="min-h-screen p-6 bg-gray-900">
       <div className="max-w-6xl mx-auto">
-        <h1 className="text-4xl font-bold mb-8 text-white">🏓 Ping Pong Leaderboard</h1>
+        <div className="flex justify-between items-center mb-8">
+          <h1 className="text-4xl font-bold text-white">🏓 Ping Pong Leaderboard</h1>
+          {user ? (
+            <div className="flex items-center gap-4">
+              <div className="text-right">
+                <div className="text-white font-medium">{user.username}</div>
+                <div className="text-sm text-gray-400">{user.email}</div>
+              </div>
+              <button
+                onClick={logout}
+                className="px-4 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-600 font-medium transition-colors"
+              >
+                Logout
+              </button>
+            </div>
+          ) : (
+            <div className="text-right">
+              <p className="text-sm text-gray-400">Login to record matches</p>
+            </div>
+          )}
+        </div>
+
+        {/* Login/Register Form - Only show when not authenticated */}
+        {!user && (
+          <div className="bg-gray-800 rounded-lg shadow-xl p-6 mb-8 border border-gray-700">
+            <div className="flex gap-4 mb-6 border-b border-gray-700">
+              <button
+                onClick={() => { setShowLogin(true); setAuthError(""); }}
+                className={`flex-1 py-2 font-medium transition-colors ${
+                  showLogin
+                    ? "text-blue-400 border-b-2 border-blue-400"
+                    : "text-gray-400 hover:text-gray-300"
+                }`}
+              >
+                Login
+              </button>
+              <button
+                onClick={() => { setShowLogin(false); setAuthError(""); }}
+                className={`flex-1 py-2 font-medium transition-colors ${
+                  !showLogin
+                    ? "text-blue-400 border-b-2 border-blue-400"
+                    : "text-gray-400 hover:text-gray-300"
+                }`}
+              >
+                Register
+              </button>
+            </div>
+
+            {authError && (
+              <div className="mb-4 p-3 bg-red-900/50 border border-red-700 text-red-200 rounded-lg text-sm">
+                {authError}
+              </div>
+            )}
+
+            {showLogin ? (
+              <form onSubmit={handleLogin} className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium mb-2 text-gray-300">Username</label>
+                    <input
+                      type="text"
+                      value={username}
+                      onChange={(e) => setUsername(e.target.value)}
+                      className="w-full px-4 py-2 bg-gray-700 border border-gray-600 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-2 text-gray-300">Password</label>
+                    <input
+                      type="password"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      className="w-full px-4 py-2 bg-gray-700 border border-gray-600 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      required
+                    />
+                  </div>
+                </div>
+                <button
+                  type="submit"
+                  disabled={authFormLoading}
+                  className="w-full px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium transition-colors disabled:bg-gray-600 disabled:cursor-not-allowed"
+                >
+                  {authFormLoading ? "Logging in..." : "Login"}
+                </button>
+              </form>
+            ) : (
+              <form onSubmit={handleRegister} className="space-y-4">
+                <div className="grid grid-cols-3 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium mb-2 text-gray-300">Username</label>
+                    <input
+                      type="text"
+                      value={username}
+                      onChange={(e) => setUsername(e.target.value)}
+                      className="w-full px-4 py-2 bg-gray-700 border border-gray-600 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-2 text-gray-300">Email</label>
+                    <input
+                      type="email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      className="w-full px-4 py-2 bg-gray-700 border border-gray-600 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-2 text-gray-300">Password</label>
+                    <input
+                      type="password"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      className="w-full px-4 py-2 bg-gray-700 border border-gray-600 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      required
+                    />
+                  </div>
+                </div>
+                <button
+                  type="submit"
+                  disabled={authFormLoading}
+                  className="w-full px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium transition-colors disabled:bg-gray-600 disabled:cursor-not-allowed"
+                >
+                  {authFormLoading ? "Registering..." : "Register"}
+                </button>
+              </form>
+            )}
+          </div>
+        )}
 
         {/* Leaderboard Table */}
         <div className="bg-gray-800 rounded-lg shadow-xl p-6 mb-8 border border-gray-700">
           <h2 className="text-2xl font-semibold mb-4 text-white">Leaderboard</h2>
           {sortedPlayers.length === 0 ? (
-            <p className="text-gray-400">No players yet. Add one below!</p>
+            <p className="text-gray-400">No players yet.</p>
           ) : (
             <table className="w-full">
               <thead>
@@ -169,77 +321,48 @@ export default function Home() {
           )}
         </div>
 
-        {/* Add Player Form */}
-        <div className="bg-gray-800 rounded-lg shadow-xl p-6 mb-8 border border-gray-700">
-          <h2 className="text-2xl font-semibold mb-4 text-white">Add New Player</h2>
-          <form onSubmit={handleCreatePlayer} className="flex gap-4">
-            <input
-              type="text"
-              placeholder="Player name"
-              value={newPlayerName}
-              onChange={(e) => setNewPlayerName(e.target.value)}
-              className="flex-1 px-4 py-2 bg-gray-700 border border-gray-600 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder-gray-400"
-              required
-            />
-            <input
-              type="email"
-              placeholder="Email (optional)"
-              value={newPlayerEmail}
-              onChange={(e) => setNewPlayerEmail(e.target.value)}
-              className="flex-1 px-4 py-2 bg-gray-700 border border-gray-600 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder-gray-400"
-            />
-            <button
-              type="submit"
-              className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium transition-colors"
-            >
-              Add Player
-            </button>
-          </form>
-        </div>
-
-        {/* Record Match */}
+        {/* Record Match - Only for logged-in users */}
+        {user && (
         <div className="bg-gray-800 rounded-lg shadow-xl p-6 mb-8 border border-gray-700">
           <h2 className="text-2xl font-semibold mb-4 text-white">Record Match</h2>
           
-          {!showMatchForm ? (
-            <button
-              onClick={() => setShowMatchForm(true)}
-              className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 font-medium transition-colors disabled:bg-gray-600 disabled:cursor-not-allowed"
-              disabled={players.length < 2}
-            >
-              {players.length < 2 ? "Need at least 2 players" : "Record New Match"}
-            </button>
+          {!user.player_id ? (
+            <div className="p-4 bg-yellow-900/30 border border-yellow-700 rounded-lg text-yellow-200">
+              <p>Your account is not linked to a player. Please contact an administrator to link your account.</p>
+            </div>
+          ) : !showMatchForm ? (
+            <div>
+              <button
+                onClick={() => setShowMatchForm(true)}
+                className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 font-medium transition-colors disabled:bg-gray-600 disabled:cursor-not-allowed"
+                disabled={players.length < 2}
+              >
+                {players.length < 2 ? "Need at least 2 players" : "Record New Match"}
+              </button>
+            </div>
           ) : (
             <form onSubmit={handleCreateMatch} className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium mb-2 text-gray-300">Player 1</label>
-                  <select
-                    value={homeId}
-                    onChange={(e) => setHomeId(Number(e.target.value))}
-                    className="w-full px-4 py-2 bg-gray-700 border border-gray-600 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
-                    required
-                  >
-                    <option value="">Select player...</option>
-                    {players.map((p) => (
+              <div>
+                <label className="block text-sm font-medium mb-2 text-gray-300">You (Home)</label>
+                <div className="px-4 py-2 bg-gray-700 border border-gray-600 text-white rounded-lg">
+                  {players.find(p => p.id === user.player_id)?.name || "Unknown Player"}
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-2 text-gray-300">Opponent (Away)</label>
+                <select
+                  value={awayId}
+                  onChange={(e) => setAwayId(Number(e.target.value))}
+                  className="w-full px-4 py-2 bg-gray-700 border border-gray-600 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+                  required
+                >
+                  <option value="">Select opponent...</option>
+                  {players
+                    .filter(p => p.id !== user.player_id)
+                    .map((p) => (
                       <option key={p.id} value={p.id}>{p.name}</option>
                     ))}
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium mb-2 text-gray-300">Player 2</label>
-                  <select
-                    value={awayId}
-                    onChange={(e) => setAwayId(Number(e.target.value))}
-                    className="w-full px-4 py-2 bg-gray-700 border border-gray-600 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
-                    required
-                  >
-                    <option value="">Select player...</option>
-                    {players.map((p) => (
-                      <option key={p.id} value={p.id}>{p.name}</option>
-                    ))}
-                  </select>
-                </div>
+                </select>
               </div>
 
               <div>
@@ -250,7 +373,7 @@ export default function Home() {
                     <input
                       type="number"
                       min="0"
-                      placeholder="Home"
+                      placeholder="You"
                       value={game.home}
                       onChange={(e) => updateGame(index, "home", Number(e.target.value))}
                       className="w-20 px-3 py-1 bg-gray-700 border border-gray-600 text-white rounded focus:outline-none focus:ring-2 focus:ring-green-500"
@@ -260,7 +383,7 @@ export default function Home() {
                     <input
                       type="number"
                       min="0"
-                      placeholder="Away"
+                      placeholder="Opponent"
                       value={game.away}
                       onChange={(e) => updateGame(index, "away", Number(e.target.value))}
                       className="w-20 px-3 py-1 bg-gray-700 border border-gray-600 text-white rounded focus:outline-none focus:ring-2 focus:ring-green-500"
@@ -295,6 +418,7 @@ export default function Home() {
             </form>
           )}
         </div>
+        )}
 
         {/* Recent Matches */}
         <div className="bg-gray-800 rounded-lg shadow-xl p-6 border border-gray-700">
