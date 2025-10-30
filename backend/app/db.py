@@ -25,7 +25,7 @@ class Player(SQLModel, table=True):
     """Player table - tracks player information and stats."""
     id: Optional[int] = Field(default=None, primary_key=True)
     name: str = Field(index=True)
-    email: Optional[str] = Field(default=None, unique=True)
+    email: str = Field(unique=True, index=True)  # Required for login
     wins: int = Field(default=0)
     losses: int = Field(default=0)
     points: int = Field(default=0)

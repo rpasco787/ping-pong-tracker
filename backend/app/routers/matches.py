@@ -3,13 +3,14 @@ from sqlmodel import Session, select
 from typing import List
 from ..schemas.matches import MatchIn, MatchOut, GameScore as GameScoreSchema
 from ..db import Match, GameScore, Player, get_session, compute_winner, WIN_POINTS
+from ..auth import get_current_user
 
 router = APIRouter(prefix="/api/matches", tags=["matches"])
 
 
 @router.get("", response_model=List[MatchOut])
 def list_matches(session: Session = Depends(get_session)):
-    """List all matches, most recent first."""
+    """List all matches, most recent first. (Public endpoint)"""
     statement = select(Match).order_by(Match.id.desc())
     matches = session.exec(statement).all()
     
@@ -33,8 +34,19 @@ def list_matches(session: Session = Depends(get_session)):
 
 
 @router.post("", response_model=MatchOut, status_code=status.HTTP_201_CREATED)
-def create_match(payload: MatchIn, session: Session = Depends(get_session)):
-    """Create a new match and update player stats."""
+def create_match(
+    payload: MatchIn, 
+    session: Session = Depends(get_session),
+    current_user: Player = Depends(get_current_user)
+):
+    """Create a new match and update player stats. (Protected - requires authentication)"""
+    # Validate that one of the players is the current user
+    if current_user.id not in [payload.home_id, payload.away_id]:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="You can only create matches where you are one of the players.",
+        )
+    
     # Validate players exist
     home_player = session.get(Player, payload.home_id)
     away_player = session.get(Player, payload.away_id)

@@ -1,16 +1,11 @@
-from pydantic import BaseModel, EmailStr, Field
-from typing import Optional
-
-
-class PlayerIn(BaseModel):
-    name: str = Field(min_length=1)
-    email: Optional[EmailStr] = None
+from pydantic import BaseModel, EmailStr
 
 
 class PlayerOut(BaseModel):
+    """Public player information."""
     id: int
     name: str
-    email: Optional[EmailStr] = None
+    email: EmailStr
     wins: int
     losses: int
     points: int

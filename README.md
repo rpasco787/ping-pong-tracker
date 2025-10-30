@@ -181,10 +181,6 @@ The backend is configured to accept requests from `http://localhost:3000` (the N
 - [ ] Add persistent database (PostgreSQL/MongoDB)
 - [ ] User authentication and authorization
 - [ ] Player profiles with avatars
-- [ ] Advanced statistics (streaks, head-to-head records)
-- [ ] Match scheduling and notifications
 - [ ] Tournament bracket system
-- [ ] Export data (CSV, PDF)
-- [ ] Mobile responsive design improvements
-- [ ] Real-time updates with WebSockets
+- [ ] Deploy
 
