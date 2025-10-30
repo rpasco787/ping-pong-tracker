@@ -112,7 +112,7 @@ export async function getMatches(): Promise<Match[]> {
 export async function createMatch(match: MatchInput): Promise<Match> {
   const res = await fetch(`${API_BASE}/api/matches`, {
     method: "POST",
-    headers: getAuthHeaders(),
+    headers: { "Content-Type": "application/json" },
     body: JSON.stringify(match),
   });
   if (!res.ok) {

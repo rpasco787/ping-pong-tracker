@@ -8,10 +8,8 @@ import {
   type Match,
   type MatchInput 
 } from "@/lib/api";
-import { useAuth } from "@/contexts/AuthContext";
 
 export default function Home() {
-  const { user, loading: authContextLoading, login, register, logout } = useAuth();
   // State for data
   const [players, setPlayers] = useState<Player[]>([]);
   const [matches, setMatches] = useState<Match[]>([]);
@@ -51,47 +49,8 @@ export default function Home() {
     }
   }
 
-  async function handleLogin(e: React.FormEvent) {
-    e.preventDefault();
-    setAuthError("");
-    setAuthFormLoading(true);
-    try {
-      await login(username, password);
-      setUsername("");
-      setPassword("");
-    } catch (error) {
-      setAuthError(error instanceof Error ? error.message : "Failed to login");
-    } finally {
-      setAuthFormLoading(false);
-    }
-  }
-
-  async function handleRegister(e: React.FormEvent) {
-    e.preventDefault();
-    setAuthError("");
-    if (!email.trim()) {
-      setAuthError("Email is required");
-      return;
-    }
-    setAuthFormLoading(true);
-    try {
-      await register(username, email, password);
-      setUsername("");
-      setEmail("");
-      setPassword("");
-    } catch (error) {
-      setAuthError(error instanceof Error ? error.message : "Failed to register");
-    } finally {
-      setAuthFormLoading(false);
-    }
-  }
-
   async function handleCreateMatch(e: React.FormEvent) {
     e.preventDefault();
-    if (!user?.player_id) {
-      alert("Your account is not linked to a player. Please contact an administrator.");
-      return;
-    }
     if (awayId === "") {
       alert("Please select an opponent");
       return;
