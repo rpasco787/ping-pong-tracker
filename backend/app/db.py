@@ -46,6 +46,18 @@ class GameScore(SQLModel, table=True):
     home: int = Field(ge=0)
     away: int = Field(ge=0)
 
+class WeeklyArchive(SQLModel, table=True):
+    """WeeklyArchive table - tracks weekly winners."""
+    id: Optional[int] = Field(default=None, primary_key=True)
+    week_start: str = Field(index=True)
+    week_end: str = Field(index=True)
+    winner_id: int = Field(foreign_key="player.id")
+    player_id: int = Field(foreign_key="player.id")
+    player_name: str = Field(index=True)
+    wins: int = Field(default=0)
+    losses: int = Field(default=0)
+    points: int = Field(default=0)
+    rank: int = Field(default=0)
 
 
 def create_db_and_tables() -> None:
