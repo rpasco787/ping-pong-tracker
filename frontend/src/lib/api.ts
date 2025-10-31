@@ -178,3 +178,38 @@ export async function createMatch(match: MatchInput): Promise<Match> {
   }
   return res.json();
 }
+
+// Archive types
+export interface WeekInfo {
+  week_start: string;
+  week_end: string;
+  winner_id: number;
+  winner_name: string;
+  total_players: number;
+}
+
+export interface WeeklyArchive {
+  id: number;
+  week_start: string;
+  week_end: string;
+  winner_id: number;
+  player_id: number;
+  player_name: string;
+  wins: number;
+  losses: number;
+  points: number;
+  rank: number;
+}
+
+// Archive functions
+export async function getArchivedWeeks(): Promise<WeekInfo[]> {
+  const res = await fetch(`${API_BASE}/api/archives/weeks`);
+  if (!res.ok) throw new Error("Failed to fetch archived weeks");
+  return res.json();
+}
+
+export async function getWeeklyLeaderboard(weekStart: string): Promise<WeeklyArchive[]> {
+  const res = await fetch(`${API_BASE}/api/archives/weeks/${encodeURIComponent(weekStart)}`);
+  if (!res.ok) throw new Error("Failed to fetch weekly leaderboard");
+  return res.json();
+}
