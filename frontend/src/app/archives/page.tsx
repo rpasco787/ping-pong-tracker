@@ -77,16 +77,10 @@ export default function ArchivesPage() {
         <div className="flex justify-between items-center mb-8">
           <div>
             <div className="flex items-center gap-3 mb-2">
-              <div className="bg-gradient-to-br from-purple-500 to-pink-600 p-3 rounded-xl shadow-lg">
-                <span className="text-3xl">📚</span>
-              </div>
-              <h1 className="text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-purple-400 via-pink-500 to-fuchsia-600">
+              <h1 className="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-purple-400 via-pink-500 to-fuchsia-600">
                 Weekly Archives
               </h1>
             </div>
-            <p className="text-slate-500 text-sm font-medium tracking-wide ml-16">
-              Relive past victories and legendary matches
-            </p>
           </div>
           <button
             onClick={() => router.push("/")}
@@ -101,7 +95,7 @@ export default function ArchivesPage() {
           <div className="absolute inset-0 bg-gradient-to-r from-indigo-600/5 to-pink-600/5"></div>
           <div className="relative p-5">
             <p className="text-indigo-200 font-medium">
-              💡 View past weekly leaderboards and see who won each week. Click on a week to expand and view the full rankings.
+              View past weekly leaderboards and see who won each week. Click on a week to expand and view the full rankings.
             </p>
           </div>
         </div>

@@ -30,7 +30,7 @@ export default function Navigation({ currentUser, onLoginClick, onLogout }: Navi
               onClick={() => router.push("/archives")}
               className="px-4 py-2 bg-slate-800/80 hover:bg-slate-700/80 text-slate-200 rounded-lg font-medium transition-all duration-200 border border-slate-700/50 hover:border-slate-600/50"
             >
-              📚 Archives
+              Archives
             </button>
             
             {currentUser ? (

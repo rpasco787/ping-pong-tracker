@@ -158,7 +158,6 @@ export default function Home() {
           <div className="relative mb-8 overflow-hidden rounded-2xl bg-gradient-to-r from-cyan-900/30 via-blue-900/30 to-indigo-900/30 backdrop-blur-sm border border-cyan-700/30 shadow-lg">
             <div className="absolute inset-0 bg-gradient-to-r from-cyan-600/5 to-blue-600/5"></div>
             <div className="relative p-5 flex items-center justify-center gap-3">
-              <span className="text-2xl">🔒</span>
               <p className="text-cyan-300 font-medium text-lg">
                 Login or register to record matches
               </p>
