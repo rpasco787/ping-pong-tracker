@@ -2,6 +2,8 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { getArchivedWeeks, getWeeklyLeaderboard, type WeekInfo, type WeeklyArchive } from "@/lib/api";
+import { formatDateRange } from "@/lib/utils";
+import WeekArchiveCard from "@/components/WeekArchiveCard";
 
 export default function ArchivesPage() {
   const router = useRouter();
@@ -53,156 +55,82 @@ export default function ArchivesPage() {
     }
   }
 
-  function formatDateRange(weekStart: string, weekEnd: string): string {
-    const start = new Date(weekStart);
-    const end = new Date(weekEnd);
-    
-    const options: Intl.DateTimeFormatOptions = { month: "short", day: "numeric", year: "numeric" };
-    const startStr = start.toLocaleDateString("en-US", options);
-    const endStr = end.toLocaleDateString("en-US", options);
-    
-    return `${startStr} - ${endStr}`;
-  }
-
   if (loading) {
     return (
-      <main className="min-h-screen p-6 bg-gray-900">
-        <div className="max-w-6xl mx-auto">
-          <p className="text-gray-300">Loading archived weeks...</p>
+      <main className="min-h-screen p-6 bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950">
+        <div className="max-w-7xl mx-auto">
+          <div className="flex items-center justify-center h-screen">
+            <div className="text-center">
+              <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-cyan-500 mb-4"></div>
+              <p className="text-slate-400 text-lg">Loading archived weeks...</p>
+            </div>
+          </div>
         </div>
       </main>
     );
   }
 
   return (
-    <main className="min-h-screen p-6 bg-gray-900">
-      <div className="max-w-6xl mx-auto">
+    <main className="min-h-screen p-6 bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950">
+      <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="flex justify-between items-center mb-8">
-          <h1 className="text-4xl font-bold text-white">📚 Weekly Archives</h1>
+          <div>
+            <div className="flex items-center gap-3 mb-2">
+              <div className="bg-gradient-to-br from-purple-500 to-pink-600 p-3 rounded-xl shadow-lg">
+                <span className="text-3xl">📚</span>
+              </div>
+              <h1 className="text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-purple-400 via-pink-500 to-fuchsia-600">
+                Weekly Archives
+              </h1>
+            </div>
+            <p className="text-slate-500 text-sm font-medium tracking-wide ml-16">
+              Relive past victories and legendary matches
+            </p>
+          </div>
           <button
             onClick={() => router.push("/")}
-            className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium transition-colors"
+            className="px-6 py-3 bg-gradient-to-r from-cyan-600 to-blue-600 text-white rounded-xl hover:from-cyan-700 hover:to-blue-700 font-semibold transition-all duration-200 shadow-lg shadow-cyan-900/50 hover:scale-105"
           >
             ← Back to Current Week
           </button>
         </div>
 
         {/* Info message */}
-        <div className="bg-blue-900 bg-opacity-30 border border-blue-700 rounded-lg p-4 mb-6">
-          <p className="text-blue-300 text-sm">
-            View past weekly leaderboards and see who won each week. Click on a week to expand and view the full rankings.
-          </p>
+        <div className="relative mb-8 overflow-hidden rounded-2xl bg-gradient-to-r from-indigo-900/30 via-purple-900/30 to-pink-900/30 backdrop-blur-sm border border-indigo-700/30 shadow-lg">
+          <div className="absolute inset-0 bg-gradient-to-r from-indigo-600/5 to-pink-600/5"></div>
+          <div className="relative p-5">
+            <p className="text-indigo-200 font-medium">
+              💡 View past weekly leaderboards and see who won each week. Click on a week to expand and view the full rankings.
+            </p>
+          </div>
         </div>
 
         {/* Archived weeks list */}
         {weeks.length === 0 ? (
-          <div className="bg-gray-800 rounded-lg shadow-xl p-8 border border-gray-700 text-center">
-            <p className="text-gray-400 text-lg">No archived weeks yet.</p>
-            <p className="text-gray-500 text-sm mt-2">
+          <div className="bg-gradient-to-br from-slate-900/90 to-slate-950/90 rounded-2xl shadow-2xl p-12 border border-slate-700/50 backdrop-blur-sm text-center">
+            <div className="text-6xl mb-4">📦</div>
+            <p className="text-slate-400 text-xl font-medium mb-2">No archived weeks yet.</p>
+            <p className="text-slate-500 text-sm">
               Weekly leaderboards will appear here after the first Sunday reset.
             </p>
           </div>
         ) : (
           <div className="space-y-4">
-            {weeks.map((week) => {
-              const isExpanded = expandedWeek === week.week_start;
-              const isLoading = loadingWeek === week.week_start;
-              const leaderboard = leaderboards[week.week_start];
-
-              return (
-                <div
-                  key={week.week_start}
-                  className="bg-gray-800 rounded-lg shadow-xl border border-gray-700 overflow-hidden"
-                >
-                  {/* Week header - clickable */}
-                  <button
-                    onClick={() => toggleWeek(week.week_start)}
-                    className="w-full px-6 py-4 flex items-center justify-between hover:bg-gray-750 transition-colors"
-                  >
-                    <div className="flex items-center gap-4">
-                      <div className="text-3xl">
-                        {isExpanded ? "📂" : "📁"}
-                      </div>
-                      <div className="text-left">
-                        <h2 className="text-xl font-semibold text-white">
-                          {formatDateRange(week.week_start, week.week_end)}
-                        </h2>
-                        <p className="text-sm text-gray-400 mt-1">
-                          🏆 Winner: <span className="text-yellow-400 font-medium">{week.winner_name}</span>
-                          {" • "}
-                          {week.total_players} {week.total_players === 1 ? "player" : "players"}
-                        </p>
-                      </div>
-                    </div>
-                    <div className="text-gray-400">
-                      {isLoading ? (
-                        <span className="text-sm">Loading...</span>
-                      ) : (
-                        <span className="text-2xl">{isExpanded ? "▼" : "▶"}</span>
-                      )}
-                    </div>
-                  </button>
-
-                  {/* Expanded leaderboard */}
-                  {isExpanded && leaderboard && (
-                    <div className="border-t border-gray-700 p-6">
-                      <h3 className="text-lg font-semibold text-white mb-4">Weekly Leaderboard</h3>
-                      <table className="w-full">
-                        <thead>
-                          <tr className="border-b border-gray-700">
-                            <th className="text-left py-2 px-4 text-gray-300">Rank</th>
-                            <th className="text-left py-2 px-4 text-gray-300">Player</th>
-                            <th className="text-center py-2 px-4 text-gray-300">Points</th>
-                            <th className="text-center py-2 px-4 text-gray-300">Wins</th>
-                            <th className="text-center py-2 px-4 text-gray-300">Losses</th>
-                            <th className="text-center py-2 px-4 text-gray-300">Win Rate</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {leaderboard.map((player) => {
-                            const totalGames = player.wins + player.losses;
-                            const winRate = totalGames > 0
-                              ? ((player.wins / totalGames) * 100).toFixed(1)
-                              : "0.0";
-                            const isWinner = player.player_id === week.winner_id;
-
-                            return (
-                              <tr
-                                key={player.id}
-                                className={`border-b border-gray-700 ${
-                                  isWinner ? "bg-yellow-900 bg-opacity-20" : "hover:bg-gray-700"
-                                }`}
-                              >
-                                <td className="py-3 px-4">
-                                  <div className="flex items-center gap-2">
-                                    <span className="font-bold text-gray-400">#{player.rank}</span>
-                                    {isWinner && <span className="text-yellow-400">👑</span>}
-                                  </div>
-                                </td>
-                                <td className="py-3 px-4">
-                                  <div className="font-medium text-white">{player.player_name}</div>
-                                </td>
-                                <td className="text-center py-3 px-4 font-bold text-blue-400">
-                                  {player.points}
-                                </td>
-                                <td className="text-center py-3 px-4 text-green-400">{player.wins}</td>
-                                <td className="text-center py-3 px-4 text-red-400">{player.losses}</td>
-                                <td className="text-center py-3 px-4 text-gray-300">{winRate}%</td>
-                              </tr>
-                            );
-                          })}
-                        </tbody>
-                      </table>
-                    </div>
-                  )}
-                </div>
-              );
-            })}
+            {weeks.map((week) => (
+              <WeekArchiveCard
+                key={week.week_start}
+                week={week}
+                dateRange={formatDateRange(week.week_start, week.week_end)}
+                isExpanded={expandedWeek === week.week_start}
+                isLoading={loadingWeek === week.week_start}
+                leaderboard={leaderboards[week.week_start]}
+                onToggle={() => toggleWeek(week.week_start)}
+              />
+            ))}
           </div>
         )}
       </div>
     </main>
   );
 }
-
