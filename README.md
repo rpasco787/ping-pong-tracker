@@ -178,10 +178,8 @@ The backend is configured to accept requests from `http://localhost:3000` (the N
 
 ## Future Enhancements
 
-- [Done] Add persistent database (PostgreSQL/MongoDB)
-- [] User authentication and authorization
-- [ ] Player profiles with avatars
-- [ ] Tournament bracket system
-- [ ] Cleaner, more modern UI
-- [ ] Web integration
+- [X] User authentication and authorization
+- [X] Only weekly leaderboard (store past weekly winners)
+- [ ] Clean up UI and UI code
+- [ ] Deploy
 

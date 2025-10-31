@@ -25,7 +25,7 @@ class Player(SQLModel, table=True):
     """Player table - tracks player information and stats."""
     id: Optional[int] = Field(default=None, primary_key=True)
     name: str = Field(index=True)
-    email: Optional[str] = Field(default=None, unique=True)
+    email: str = Field(unique=True, index=True)  # Required for login
     wins: int = Field(default=0)
     losses: int = Field(default=0)
     points: int = Field(default=0)
@@ -46,15 +46,18 @@ class GameScore(SQLModel, table=True):
     home: int = Field(ge=0)
     away: int = Field(ge=0)
 
-class User(SQLModel, table=True):
+class WeeklyArchive(SQLModel, table=True):
+    """WeeklyArchive table - tracks weekly winners."""
     id: Optional[int] = Field(default=None, primary_key=True)
-    username: str = Field(index=True, unique=True)
-    email: str = Field(index=True, unique=True)
-    hashed_password: str
-    is_active: bool = Field(default=True)
-    is_superuser: bool = Field(default=False)
-    player_id: Optional[int] = Field(default=None, foreign_key="player.id")
-
+    week_start: str = Field(index=True)
+    week_end: str = Field(index=True)
+    winner_id: int = Field(foreign_key="player.id")
+    player_id: int = Field(foreign_key="player.id")
+    player_name: str = Field(index=True)
+    wins: int = Field(default=0)
+    losses: int = Field(default=0)
+    points: int = Field(default=0)
+    rank: int = Field(default=0)
 
 
 def create_db_and_tables() -> None:
