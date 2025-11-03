@@ -7,7 +7,7 @@ sqlmodel==0.0.14
 alembic==1.13.1
 python-jose[cryptography]==3.3.0
 apscheduler==3.10.4
-
+psycopg2-binary==2.9.9
 # Testing dependencies
 pytest==7.4.3
 pytest-asyncio==0.21.1
